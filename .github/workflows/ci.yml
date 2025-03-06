@@ -14,6 +14,10 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   style:
     name: Style
@@ -72,6 +76,12 @@ jobs:
         run: |
           apt-get update && apt-get install -y mingw-w64 sudo
 
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
       - name: Build Windows Target
         shell: bash
         run: |
@@ -89,7 +99,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          token: ${{ secrets.CR_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             bin/*
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
