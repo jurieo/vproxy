@@ -1,6 +1,6 @@
 [package]
 name = "vproxy"
-version = "2.3.1"
+version = "2.3.2"
 authors = ["gngppz@gmail.com"]
 description = "A high-performance HTTP/HTTPS/SOCKS5 proxy server"
 repository = "https://github.com/0x676e67/vproxy"
@@ -14,7 +14,7 @@ rust-version = "1.85"
 base64 = "0.22.0"
 cidr = "0.3.0"
 thiserror = "2"
-tokio = { version = "1.45.1", features = [
+tokio = { version = "1.46.1", features = [
     "net",
     "rt-multi-thread",
     "macros",
@@ -31,7 +31,7 @@ self_update = { version = "0.42.0", default-features = false, features = [
 fxhash = "0.2.1"
 futures-util = { version = "0.3.30", default-features = false }
 
-# log
+# tracing
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 
