@@ -3,10 +3,7 @@ use crate::{
     socks::proto::{AsyncStreamOperation, Method, UsernamePassword, handshake::password},
 };
 use password::{Request, Response, Status::*};
-use std::{
-    future::Future,
-    io::{Error, ErrorKind},
-};
+use std::{future::Future, io::Error};
 use tokio::net::TcpStream;
 
 pub trait Auth: Send {
@@ -103,14 +100,11 @@ impl Auth for PasswordAuth {
         if is_equal {
             let extension = Extension::try_from(&self.inner.username, req.user_pass.username)
                 .await
-                .map_err(|_| Error::new(ErrorKind::Other, "failed to parse extension"))?;
+                .map_err(|_| Error::other("failed to parse extension"))?;
 
             Ok((true, extension))
         } else {
-            Err(Error::new(
-                ErrorKind::Other,
-                "username or password is incorrect",
-            ))
+            Err(Error::other("username or password is incorrect"))
         }
     }
 }
