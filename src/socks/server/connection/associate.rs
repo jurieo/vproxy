@@ -1,7 +1,3 @@
-use crate::socks::proto::{
-    Address, AsyncStreamOperation, Reply, Response, StreamOperation, UdpHeader,
-};
-use bytes::{Bytes, BytesMut};
 use std::{
     net::SocketAddr,
     pin::Pin,
@@ -9,9 +5,15 @@ use std::{
     task::{Context, Poll},
     time::Duration,
 };
+
+use bytes::{Bytes, BytesMut};
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf},
     net::{TcpStream, ToSocketAddrs, UdpSocket},
+};
+
+use crate::socks::proto::{
+    Address, AsyncStreamOperation, Reply, Response, StreamOperation, UdpHeader,
 };
 
 /// Socks5 connection type `UdpAssociate`

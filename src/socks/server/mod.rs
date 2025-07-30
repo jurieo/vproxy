@@ -1,12 +1,16 @@
+use std::{net::SocketAddr, sync::Arc};
+
 use connection::{
     bind::{self, Bind},
     connect::{self, Connect},
 };
-use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
 
 pub mod auth;
 pub mod connection;
+
+use tokio::{io::AsyncWriteExt, net::UdpSocket, sync::RwLock};
+use tracing::{Level, instrument};
 
 use super::{
     proto::{Address, Reply, UdpHeader},
@@ -17,17 +21,11 @@ pub use crate::socks::server::{
     connection::{ClientConnection, IncomingConnection, associate::UdpAssociate},
 };
 use crate::{
-    connect::Connector,
+    connect::{Connector, TcpConnector, UdpConnector},
+    extension::Extension,
     serve::{Context, Serve},
     socks::error::Error,
 };
-use crate::{
-    connect::{TcpConnector, UdpConnector},
-    extension::Extension,
-};
-
-use tokio::{io::AsyncWriteExt, net::UdpSocket, sync::RwLock};
-use tracing::{Level, instrument};
 
 pub struct Socks5Server {
     listener: TcpListener,
@@ -256,24 +254,28 @@ async fn handle_udp_proxy(
 ///
 /// 1. **Client sends BIND request**
 ///    - Client sends a BIND request to the SOCKS5 proxy server.
-///    - Proxy server responds with an IP address and port, which is the temporary listening port allocated by the proxy server.
+///    - Proxy server responds with an IP address and port, which is the temporary listening port
+///      allocated by the proxy server.
 ///
 /// 2. **Proxy server listens for inbound connections**
 ///    - Proxy server listens on the allocated temporary port.
 ///    - Proxy server sends a BIND response to the client, notifying the listening address and port.
 ///
 /// 3. **Client receives BIND response**
-///    - Client receives the BIND response from the proxy server, knowing the address and port the proxy server is listening on.
+///    - Client receives the BIND response from the proxy server, knowing the address and port the
+///      proxy server is listening on.
 ///
 /// 4. **Target server initiates connection**
 ///    - Target server initiates a connection to the proxy server's listening address and port.
 ///
 /// 5. **Proxy server accepts inbound connection**
 ///    - Proxy server accepts the inbound connection from the target server.
-///    - Proxy server sends a second BIND response to the client, notifying that the inbound connection has been established.
+///    - Proxy server sends a second BIND response to the client, notifying that the inbound
+///      connection has been established.
 ///
 /// 6. **Client receives second BIND response**
-///    - Client receives the second BIND response from the proxy server, knowing that the inbound connection has been established.
+///    - Client receives the second BIND response from the proxy server, knowing that the inbound
+///      connection has been established.
 ///
 /// 7. **Data transfer**
 ///    - Proxy server forwards data between the client and the target server.

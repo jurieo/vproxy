@@ -1,8 +1,9 @@
-use crate::BIN_NAME;
 use rcgen::{
     BasicConstraints, CertificateParams, DistinguishedName, DnType, IsCa, KeyPair, KeyUsagePurpose,
     SanType, date_time_ymd,
 };
+
+use crate::BIN_NAME;
 
 /// Get self-signed certificate and key.
 pub fn get_self_signed_cert() -> crate::Result<(Vec<u8>, Vec<u8>)> {

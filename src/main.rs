@@ -13,8 +13,9 @@ mod route;
 mod serve;
 mod socks;
 
-use clap::{Args, Parser, Subcommand};
 use std::{net::SocketAddr, path::PathBuf};
+
+use clap::{Args, Parser, Subcommand};
 
 #[cfg(feature = "jemalloc")]
 #[global_allocator]

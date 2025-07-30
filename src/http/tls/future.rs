@@ -1,19 +1,23 @@
 //! Future types.
 
-use super::RustlsConfig;
-use pin_project_lite::pin_project;
-use std::io::{Error, ErrorKind};
-use std::time::Duration;
 use std::{
     fmt,
     future::Future,
     io,
+    io::{Error, ErrorKind},
     pin::Pin,
     task::{Context, Poll},
+    time::Duration,
 };
-use tokio::io::{AsyncRead, AsyncWrite};
-use tokio::time::{Timeout, timeout};
+
+use pin_project_lite::pin_project;
+use tokio::{
+    io::{AsyncRead, AsyncWrite},
+    time::{Timeout, timeout},
+};
 use tokio_rustls::{Accept, TlsAcceptor, server::TlsStream};
+
+use super::RustlsConfig;
 
 pin_project! {
     /// Future type for [`RustlsAcceptor`](crate::tls_rustls::RustlsAcceptor).

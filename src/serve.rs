@@ -1,11 +1,13 @@
+use std::net::SocketAddr;
+
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
+
 use crate::{
     AuthMode, BootArgs, Proxy, Result,
     connect::Connector,
     http::{HttpServer, HttpsServer},
     socks::Socks5Server,
 };
-use std::net::SocketAddr;
-use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 /// The `Serve` trait defines a common interface for starting HTTP and SOCKS5 servers.
 ///

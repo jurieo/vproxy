@@ -6,6 +6,8 @@ mod request;
 mod response;
 mod udp;
 
+use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
+
 pub use self::{
     address::Address,
     command::Command,
@@ -15,7 +17,6 @@ pub use self::{
     response::Response,
     udp::UdpHeader,
 };
-use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 
 /// SOCKS protocol version, either 4 or 5
 #[repr(u8)]

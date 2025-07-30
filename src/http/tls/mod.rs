@@ -1,16 +1,17 @@
 pub mod future;
 
-use self::future::RustlsAcceptorFuture;
-use crate::{
-    http::accept::{Accept, DefaultAcceptor},
-    http::server::io_other,
-};
+use std::{fmt, io, path::Path, sync::Arc, time::Duration};
+
 use rustls_pemfile::Item;
 use rustls_pki_types::{CertificateDer, PrivateKeyDer};
-use std::time::Duration;
-use std::{fmt, io, path::Path, sync::Arc};
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_rustls::{rustls::ServerConfig, server::TlsStream};
+
+use self::future::RustlsAcceptorFuture;
+use crate::http::{
+    accept::{Accept, DefaultAcceptor},
+    server::io_other,
+};
 
 /// Tls acceptor using rustls.
 #[derive(Clone)]

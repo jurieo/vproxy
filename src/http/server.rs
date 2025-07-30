@@ -1,33 +1,37 @@
-use auth::Authenticator;
-use http::uri::Authority;
-use tracing::{Level, instrument};
+use std::{
+    io::{self},
+    net::SocketAddr,
+    path::PathBuf,
+    sync::Arc,
+    time::Duration,
+};
 
-use super::accept::Accept;
-use super::error::Error;
-use super::genca;
-use super::tls::{RustlsAcceptor, RustlsConfig};
-use crate::http::accept::DefaultAcceptor;
-use crate::serve::{Context, Serve};
-use crate::{connect::Connector, extension::Extension};
+use auth::Authenticator;
 use bytes::Bytes;
-use http::StatusCode;
+use http::{StatusCode, uri::Authority};
 use http_body_util::{BodyExt, Empty, Full, combinators::BoxBody};
-use hyper::service::service_fn;
-use hyper::{Method, Request, Response, body::Incoming, upgrade::Upgraded};
+use hyper::{Method, Request, Response, body::Incoming, service::service_fn, upgrade::Upgraded};
 use hyper_util::{
     rt::{TokioExecutor, TokioIo},
     server::conn::auto::Builder,
 };
-use std::path::PathBuf;
-use std::{
-    io::{self},
-    net::SocketAddr,
-    sync::Arc,
-    time::Duration,
-};
 use tokio::{
     io::{AsyncRead, AsyncWrite},
     net::{TcpListener, TcpStream},
+};
+use tracing::{Level, instrument};
+
+use super::{
+    accept::Accept,
+    error::Error,
+    genca,
+    tls::{RustlsAcceptor, RustlsConfig},
+};
+use crate::{
+    connect::Connector,
+    extension::Extension,
+    http::accept::DefaultAcceptor,
+    serve::{Context, Serve},
 };
 
 /// HTTP server.
@@ -303,12 +307,13 @@ fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
 }
 
 mod auth {
-    use super::{Error, empty};
-    use crate::extension::Extension;
     use base64::Engine;
     use bytes::Bytes;
     use http::{HeaderMap, Response, StatusCode, header};
     use http_body_util::combinators::BoxBody;
+
+    use super::{Error, empty};
+    use crate::extension::Extension;
 
     impl TryInto<Response<BoxBody<Bytes, hyper::Error>>> for Error {
         type Error = http::Error;

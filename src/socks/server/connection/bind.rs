@@ -1,4 +1,3 @@
-use crate::socks::proto::{Address, AsyncStreamOperation, Reply, Response};
 use std::{
     marker::PhantomData,
     net::SocketAddr,
@@ -6,6 +5,7 @@ use std::{
     task::{Context, Poll},
     time::Duration,
 };
+
 use tokio::{
     io::{AsyncRead, AsyncWrite, AsyncWriteExt, ReadBuf},
     net::{
@@ -13,6 +13,8 @@ use tokio::{
         tcp::{ReadHalf, WriteHalf},
     },
 };
+
+use crate::socks::proto::{Address, AsyncStreamOperation, Reply, Response};
 
 /// Socks5 command type `Bind`
 /// you may get a `Bind<NeedFirstReply>`. After replying the client 2 times

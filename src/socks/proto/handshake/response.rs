@@ -1,5 +1,6 @@
-use crate::socks::proto::{AsyncStreamOperation, Method, StreamOperation, Version};
 use tokio::io::{AsyncRead, AsyncReadExt};
+
+use crate::socks::proto::{AsyncStreamOperation, Method, StreamOperation, Version};
 
 /// SOCKS5 handshake response
 ///

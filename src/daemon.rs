@@ -1,12 +1,16 @@
-use crate::{BIN_NAME, BootArgs, serve};
-use daemonize::Daemonize;
-use nix::sys::signal;
-use nix::unistd::{Pid, Uid, User};
 use std::{
     fs::{File, Permissions},
     os::unix::fs::PermissionsExt,
     path::Path,
 };
+
+use daemonize::Daemonize;
+use nix::{
+    sys::signal,
+    unistd::{Pid, Uid, User},
+};
+
+use crate::{BIN_NAME, BootArgs, serve};
 
 const PID_PATH: &str = concat!("/var/run/", env!("CARGO_PKG_NAME"), ".pid");
 const DEFAULT_STDOUT_PATH: &str = concat!("/var/run/", env!("CARGO_PKG_NAME"), ".out");

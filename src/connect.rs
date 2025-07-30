@@ -1,4 +1,8 @@
-use super::{extension::Extension, http::error::Error};
+use std::{
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    time::Duration,
+};
+
 use cidr::{IpCidr, Ipv4Cidr, Ipv6Cidr};
 use futures_util::future::Either;
 use http::{Request, Response, uri::Authority};
@@ -8,14 +12,12 @@ use hyper_util::{
     rt::{TokioExecutor, TokioTimer},
 };
 use rand::random;
-use std::{
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    time::Duration,
-};
 use tokio::{
     net::{TcpSocket, TcpStream, UdpSocket, lookup_host},
     time::timeout,
 };
+
+use super::{extension::Extension, http::error::Error};
 
 /// `Connector` struct is used to create HTTP connectors, optionally configured
 /// with an IPv6 CIDR and a fallback IP address.
@@ -39,7 +41,8 @@ pub struct Connector {
 }
 
 /// `TcpConnector` is a lightweight wrapper for TCP connection settings.
-/// It provides methods to create and manage TCP connections using the configuration from `Connector`.
+/// It provides methods to create and manage TCP connections using the configuration from
+/// `Connector`.
 pub struct TcpConnector<'a> {
     inner: &'a Connector,
 }
@@ -51,7 +54,8 @@ pub struct UdpConnector<'a> {
 }
 
 /// `HttpConnector` is a lightweight wrapper for HTTP connection settings.
-/// It provides methods to create and manage HTTP connections using the configuration from `Connector`.
+/// It provides methods to create and manage HTTP connections using the configuration from
+/// `Connector`.
 pub struct HttpConnector<'a> {
     inner: &'a Connector,
 }
@@ -598,7 +602,8 @@ fn assign_ipv4_with_range(cidr: Ipv4Cidr, range: u8, combined: u32) -> Ipv4Addr 
         return assign_rand_ipv4(cidr);
     }
 
-    // Shift the combined value to the left by (32 - range) bits to place it in the correct position.
+    // Shift the combined value to the left by (32 - range) bits to place it in the correct
+    // position.
     let combined_shifted = (combined & ((1u32 << (range - prefix_len)) - 1)) << (32 - range);
 
     // Create a subnet mask that preserves the fixed network part of the IP address.
@@ -624,7 +629,8 @@ fn assign_ipv6_with_range(cidr: Ipv6Cidr, range: u8, combined: u128) -> Ipv6Addr
         return assign_rand_ipv6(cidr);
     }
 
-    // Shift the combined value to the left by (128 - range) bits to place it in the correct position.
+    // Shift the combined value to the left by (128 - range) bits to place it in the correct
+    // position.
     let combined_shifted = (combined & ((1u128 << (range - prefix_len)) - 1)) << (128 - range);
 
     // Create a subnet mask that preserves the fixed network part of the IP address.
@@ -643,7 +649,8 @@ fn assign_ipv6_with_range(cidr: Ipv6Cidr, range: u8, combined: u128) -> Ipv6Addr
 ///
 /// This function takes an `Extension` enum and returns an `Option<u64>` containing the value
 /// associated with the `Range`, `Session`, or `TTL` variants. If the `Extension` variant does
-/// not contain a value (i.e., it is not one of the aforementioned variants), the function returns `None`.
+/// not contain a value (i.e., it is not one of the aforementioned variants), the function returns
+/// `None`.
 fn extract_value_from_extension(extension: Extension) -> Option<u64> {
     match extension {
         Extension::Range(value) => Some(value),

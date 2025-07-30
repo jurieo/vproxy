@@ -164,7 +164,6 @@ pub fn sysctl_ipv6_no_local_bind(subnet: &IpCidr) {
 /// # See Also
 ///
 /// * `execute_sysctl` - The function used to execute the `sysctl` command.
-///
 pub fn sysctl_ipv6_all_enable_ipv6(subnet: &IpCidr) {
     if subnet.is_ipv6() {
         if let Err(err) = execute_sysctl("net.ipv6.conf.all.disable_ipv6", "0") {
@@ -185,8 +184,8 @@ pub fn sysctl_ipv6_all_enable_ipv6(subnet: &IpCidr) {
 ///
 /// # Returns
 ///
-/// * `Result<(), SysctlError>` - Returns `Ok(())` if the command succeeds,
-///   otherwise returns a `SysctlError`.
+/// * `Result<(), SysctlError>` - Returns `Ok(())` if the command succeeds, otherwise returns a
+///   `SysctlError`.
 ///
 /// # Example
 ///

@@ -1,10 +1,10 @@
-use crate::socks::proto::{Address, AsyncStreamOperation, Reply, Response};
 use std::{
     io::IoSlice,
     net::SocketAddr,
     pin::Pin,
     task::{Context, Poll},
 };
+
 use tokio::{
     io::{AsyncRead, AsyncWrite, AsyncWriteExt, ReadBuf},
     net::{
@@ -12,6 +12,8 @@ use tokio::{
         tcp::{OwnedReadHalf, OwnedWriteHalf, ReadHalf, WriteHalf},
     },
 };
+
+use crate::socks::proto::{Address, AsyncStreamOperation, Reply, Response};
 
 /// Socks5 connection type `Connect`
 ///

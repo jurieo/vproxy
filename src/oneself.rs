@@ -1,18 +1,19 @@
+use self_update::{cargo_crate_version, update::UpdateStatus};
+
 use crate::BIN_NAME;
-use self_update::cargo_crate_version;
-use self_update::update::UpdateStatus;
 
 /// Updates the current executable to the latest version available.
 ///
 /// This function uses the `self_update` crate to check for updates and apply them if available.
 /// It configures the update process with various options such as repository name, binary name,
-/// target platform, and current version. If an update is found, it downloads and applies the update,
-/// and then prints the release notes or a message indicating that the update was successful.
+/// target platform, and current version. If an update is found, it downloads and applies the
+/// update, and then prints the release notes or a message indicating that the update was
+/// successful.
 ///
 /// # Errors
 ///
-/// This function returns an error if the update process fails at any step, such as building the updater,
-/// checking for updates, or applying the update.
+/// This function returns an error if the update process fails at any step, such as building the
+/// updater, checking for updates, or applying the update.
 pub(super) fn update() -> crate::Result<()> {
     let status = self_update::backends::github::Update::configure()
         .repo_owner("0x676e67")

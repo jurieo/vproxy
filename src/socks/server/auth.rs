@@ -1,10 +1,12 @@
+use std::{future::Future, io::Error};
+
+use password::{Request, Response, Status::*};
+use tokio::net::TcpStream;
+
 use crate::{
     extension::Extension,
     socks::proto::{AsyncStreamOperation, Method, UsernamePassword, handshake::password},
 };
-use password::{Request, Response, Status::*};
-use std::{future::Future, io::Error};
-use tokio::net::TcpStream;
 
 pub trait Auth: Send {
     type Output;
