@@ -1,7 +1,7 @@
 mod accept;
-pub mod error;
+mod error;
 mod genca;
 mod server;
 mod tls;
 
-pub use server::{HttpServer, HttpsServer};
+pub use self::server::{HttpServer, HttpsServer};

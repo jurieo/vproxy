@@ -1,7 +1,6 @@
 //! Future types.
 
 use std::{
-    fmt,
     future::Future,
     io,
     io::{Error, ErrorKind},
@@ -24,7 +23,7 @@ pin_project! {
     pub struct RustlsAcceptorFuture<F, I> {
         #[pin]
         inner: AcceptFuture<F, I>,
-        config: Option<RustlsConfig>,
+        config: RustlsConfig,
     }
 }
 
@@ -34,15 +33,7 @@ impl<F, I> RustlsAcceptorFuture<F, I> {
             future,
             handshake_timeout,
         };
-        let config = Some(config);
-
         Self { inner, config }
-    }
-}
-
-impl<F, I> fmt::Debug for RustlsAcceptorFuture<F, I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RustlsAcceptorFuture").finish()
     }
 }
 
@@ -76,27 +67,20 @@ where
                 AcceptFutureProj::Inner {
                     future,
                     handshake_timeout,
-                } => {
-                    match future.poll(cx) {
-                        Poll::Ready(Ok(stream)) => {
-                            let server_config = this.config
-                                .take()
-                                .expect("config is not set. this is a bug in axum-server, please report")
-                                .get_inner();
+                } => match future.poll(cx) {
+                    Poll::Ready(Ok(stream)) => {
+                        let server_config = this.config.get_inner();
+                        let acceptor = TlsAcceptor::from(server_config);
+                        let future = acceptor.accept(stream);
+                        let handshake_timeout = *handshake_timeout;
 
-                            let acceptor = TlsAcceptor::from(server_config);
-                            let future = acceptor.accept(stream);
-
-                            let handshake_timeout = *handshake_timeout;
-
-                            this.inner.set(AcceptFuture::Accept {
-                                future: timeout(handshake_timeout, future),
-                            });
-                        }
-                        Poll::Ready(Err(e)) => return Poll::Ready(Err(e)),
-                        Poll::Pending => return Poll::Pending,
+                        this.inner.set(AcceptFuture::Accept {
+                            future: timeout(handshake_timeout, future),
+                        });
                     }
-                }
+                    Poll::Ready(Err(e)) => return Poll::Ready(Err(e)),
+                    Poll::Pending => return Poll::Pending,
+                },
                 AcceptFutureProj::Accept { future } => match future.poll(cx) {
                     Poll::Ready(Ok(Ok(stream))) => {
                         return Poll::Ready(Ok(stream));

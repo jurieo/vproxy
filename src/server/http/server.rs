@@ -22,10 +22,8 @@ use tokio::{
 use tracing::{Level, instrument};
 
 use super::{
-    super::{
-        Context, Serve, connect::Connector, extension::Extension, http::accept::DefaultAcceptor,
-    },
-    accept::Accept,
+    super::{Connector, Context, Serve, extension::Extension},
+    accept::{Accept, DefaultAcceptor},
     error::Error,
     genca,
     tls::{RustlsAcceptor, RustlsConfig},
@@ -34,13 +32,14 @@ use super::{
 /// HTTP server.
 pub struct HttpServer<A = DefaultAcceptor> {
     acceptor: A,
-    builder: Builder<TokioExecutor>,
     listener: TcpListener,
-    http_proxy: Handler,
+    timeout: Duration,
+    handler: Handler,
+    builder: Builder<TokioExecutor>,
 }
 
 impl HttpServer {
-    /// Create a http server from Context.
+    /// Create a new [`HttpServer`] instance.
     pub fn new(ctx: Context) -> std::io::Result<Self> {
         let socket = if ctx.bind.is_ipv4() {
             tokio::net::TcpSocket::new_v4()?
@@ -52,9 +51,10 @@ impl HttpServer {
 
         let listener = socket.listen(ctx.concurrent as u32)?;
         let acceptor = DefaultAcceptor::new();
-        let mut builder = Builder::new(TokioExecutor::new());
-        let http_proxy = Handler::from(ctx);
+        let timeout = Duration::from_secs(ctx.connect_timeout);
+        let handler = Handler::from(ctx);
 
+        let mut builder = Builder::new(TokioExecutor::new());
         builder
             .http1()
             .title_case_headers(true)
@@ -62,27 +62,40 @@ impl HttpServer {
 
         Ok(Self {
             acceptor,
-            builder,
             listener,
-            http_proxy,
+            timeout,
+            handler,
+            builder,
         })
     }
-}
 
-impl<A> HttpServer<A>
-where
-    A: Accept<TcpStream> + Clone + Send + Sync + 'static,
-    A::Stream: AsyncRead + AsyncWrite + Unpin + Send,
-    A::Future: Send,
-{
-    /// Overwrite acceptor.
-    pub fn acceptor<Acceptor>(self, acceptor: Acceptor) -> HttpServer<Acceptor> {
-        HttpServer {
-            acceptor,
-            builder: self.builder,
-            listener: self.listener,
-            http_proxy: self.http_proxy,
-        }
+    /// Enable HTTPS with TLS certificate and private key files.
+    pub fn with_https<P>(
+        self,
+        tls_cert: P,
+        tls_key: P,
+    ) -> std::io::Result<HttpsServer<RustlsAcceptor>>
+    where
+        P: Into<Option<PathBuf>>,
+    {
+        let config = match (tls_cert.into(), tls_key.into()) {
+            (Some(cert), Some(key)) => RustlsConfig::from_pem_chain_file(cert, key),
+            _ => {
+                let (cert, key) = genca::get_self_signed_cert().map_err(io::Error::other)?;
+                RustlsConfig::from_pem(cert, key)
+            }
+        }?;
+
+        let acceptor = RustlsAcceptor::new(config, self.timeout);
+        Ok(HttpsServer {
+            http: HttpServer {
+                acceptor,
+                listener: self.listener,
+                timeout: self.timeout,
+                handler: self.handler,
+                builder: self.builder,
+            },
+        })
     }
 }
 
@@ -91,35 +104,13 @@ pub struct HttpsServer<A = RustlsAcceptor> {
     http: HttpServer<A>,
 }
 
-impl HttpsServer {
-    /// Create a https server from Context.
-    pub fn new(
-        ctx: Context,
-        tls_cert: Option<PathBuf>,
-        tls_key: Option<PathBuf>,
-    ) -> std::io::Result<HttpsServer<RustlsAcceptor>> {
-        let config = match (tls_cert, tls_key) {
-            (Some(cert), Some(key)) => RustlsConfig::from_pem_chain_file(cert, key),
-            _ => {
-                let (cert, key) = genca::get_self_signed_cert().map_err(io_other)?;
-                RustlsConfig::from_pem(cert, key)
-            }
-        }?;
-
-        let acceptor = RustlsAcceptor::new(config, ctx.connect_timeout);
-        HttpServer::new(ctx).map(|http| Self {
-            http: http.acceptor(acceptor),
-        })
-    }
-}
-
 impl<A> Serve for HttpServer<A>
 where
     A: Accept<TcpStream> + Clone + Send + Sync + 'static,
     A::Stream: AsyncRead + AsyncWrite + Unpin + Send,
     A::Future: Send,
 {
-    async fn serve(self) -> std::io::Result<()> {
+    async fn run(self) -> std::io::Result<()> {
         tracing::info!(
             "Http(s) proxy server listening on {}",
             self.listener.local_addr()?
@@ -128,7 +119,7 @@ where
         let mut incoming = self.listener;
         let acceptor = self.acceptor;
         let builder = self.builder;
-        let proxy = self.http_proxy;
+        let proxy = self.handler;
 
         loop {
             let (tcp_stream, socket_addr) = tokio::select! {
@@ -151,7 +142,7 @@ where
                         )
                         .await
                     {
-                        tracing::error!("Failed to serve connection: {:?}", err);
+                        tracing::debug!("Failed to serve connection: {:?}", err);
                     }
                 }
             });
@@ -160,11 +151,13 @@ where
 }
 
 impl Serve for HttpsServer {
-    async fn serve(self) -> std::io::Result<()> {
-        self.http.serve().await
+    #[inline]
+    async fn run(self) -> std::io::Result<()> {
+        self.http.run().await
     }
 }
 
+#[inline]
 async fn accept(listener: &mut TcpListener) -> (TcpStream, SocketAddr) {
     loop {
         match listener.accept().await {
@@ -172,12 +165,6 @@ async fn accept(listener: &mut TcpListener) -> (TcpStream, SocketAddr) {
             Err(_) => tokio::time::sleep(Duration::from_millis(50)).await,
         }
     }
-}
-
-type BoxError = Box<dyn std::error::Error + Send + Sync>;
-
-pub(super) fn io_other<E: Into<BoxError>>(error: E) -> io::Error {
-    io::Error::other(error)
 }
 
 #[derive(Clone)]
@@ -234,10 +221,10 @@ impl Handler {
                     match hyper::upgrade::on(req).await {
                         Ok(upgraded) => {
                             if let Err(e) = self.tunnel(upgraded, authority, extension).await {
-                                tracing::warn!("server io error: {}", e);
+                                tracing::debug!("server io error: {}", e);
                             };
                         }
-                        Err(e) => tracing::warn!("upgrade error: {}", e),
+                        Err(e) => tracing::debug!("upgrade error: {}", e),
                     }
                 });
 
@@ -255,6 +242,7 @@ impl Handler {
                 .send_request(req, extension)
                 .await
                 .map(|res| res.map(|b| b.boxed()))
+                .map_err(Into::into)
         }
     }
 

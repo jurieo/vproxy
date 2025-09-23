@@ -2,4 +2,4 @@ mod error;
 mod proto;
 mod server;
 
-pub use server::Socks5Server;
+pub use self::server::Socks5Server;

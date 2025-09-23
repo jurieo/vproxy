@@ -21,11 +21,7 @@ use crate::{AuthMode, BootArgs, Proxy, Result};
 /// handle incoming connections.
 pub trait Serve {
     /// Starts the server and handles incoming connections.
-    ///
-    /// This method is responsible for starting the server, accepting incoming connections,
-    /// and processing requests. It should be implemented by types that represent server
-    /// configurations for HTTP and SOCKS5 proxy servers.
-    async fn serve(self) -> std::io::Result<()>;
+    async fn run(self) -> std::io::Result<()>;
 }
 
 /// Run the server with the provided boot arguments.
@@ -75,7 +71,7 @@ pub fn run(args: BootArgs) -> Result<()> {
             let server = Server::new(args)?;
 
             tokio::select! {
-                _ = server.serve() => Ok(()),
+                _ = server.run() => Ok(()),
                 _ = shutdown_signal => {
                     Ok(())
                 }
@@ -105,7 +101,7 @@ impl Server {
     /// based on the `proxy` field in the `BootArgs`. It constructs the server context
     /// using the provided authentication mode and other configuration parameters.
     fn new(args: BootArgs) -> std::io::Result<Server> {
-        let ctx = move |auth: AuthMode| Context {
+        let context = move |auth: AuthMode| Context {
             auth,
             bind: args.bind,
             concurrent: args.concurrent,
@@ -119,23 +115,25 @@ impl Server {
         };
 
         match args.proxy {
-            Proxy::Http { auth } => HttpServer::new(ctx(auth)).map(Server::Http),
+            Proxy::Http { auth } => HttpServer::new(context(auth)).map(Server::Http),
             Proxy::Https {
                 auth,
                 tls_cert,
                 tls_key,
-            } => HttpsServer::new(ctx(auth), tls_cert, tls_key).map(Server::Https),
-            Proxy::Socks5 { auth } => Socks5Server::new(ctx(auth)).map(Server::Socks5),
+            } => HttpServer::new(context(auth))
+                .and_then(|s| s.with_https(tls_cert, tls_key))
+                .map(Server::Https),
+            Proxy::Socks5 { auth } => Socks5Server::new(context(auth)).map(Server::Socks5),
         }
     }
 }
 
 impl Serve for Server {
-    async fn serve(self) -> std::io::Result<()> {
+    async fn run(self) -> std::io::Result<()> {
         match self {
-            Server::Http(server) => server.serve().await,
-            Server::Https(server) => server.serve().await,
-            Server::Socks5(server) => server.serve().await,
+            Server::Http(server) => server.run().await,
+            Server::Https(server) => server.run().await,
+            Server::Socks5(server) => server.run().await,
         }
     }
 }

@@ -59,7 +59,7 @@ impl Socks5Server {
 }
 
 impl Serve for Socks5Server {
-    async fn serve(self) -> std::io::Result<()> {
+    async fn run(self) -> std::io::Result<()> {
         tracing::info!("Socks5 server listening on {}", self.listener.local_addr()?);
 
         while let Ok((stream, socket_addr)) = self.listener.accept().await {

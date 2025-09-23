@@ -17,7 +17,7 @@ use tokio::{
     time::timeout,
 };
 
-use super::{extension::Extension, http::error::Error};
+use super::extension::Extension;
 
 /// `Connector` struct is used to create HTTP connectors, optionally configured
 /// with an IPv6 CIDR and a fallback IP address.
@@ -443,7 +443,7 @@ impl HttpConnector<'_> {
         self,
         req: Request<Incoming>,
         extension: Extension,
-    ) -> Result<Response<Incoming>, Error> {
+    ) -> Result<Response<Incoming>, hyper_util::client::legacy::Error> {
         let mut connector = self.inner.http.clone();
         match (self.inner.cidr, self.inner.fallback) {
             (Some(IpCidr::V4(cidr)), Some(IpAddr::V6(v6))) => {
@@ -473,7 +473,6 @@ impl HttpConnector<'_> {
             .build(connector)
             .request(req)
             .await
-            .map_err(Into::into)
     }
 }
 
