@@ -168,6 +168,7 @@ pub enum Oneself {
 
 fn main() -> Result<()> {
     let opt = Opt::parse();
+    #[cfg(target_family = "unix")]
     let daemon = daemon::Daemon::default();
     match opt.commands {
         Commands::Run(args) => server::run(args),
