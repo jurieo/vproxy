@@ -182,7 +182,7 @@ where
                 )
                 .await
             {
-                tracing::debug!("Failed to serve connection: {:?}", err);
+                tracing::debug!("[HTTP] failed to serve connection: {:?}", err);
             }
         }
     }
@@ -250,16 +250,16 @@ impl Handler {
                     match hyper::upgrade::on(req).await {
                         Ok(upgraded) => {
                             if let Err(e) = self.tunnel(upgraded, authority, extension).await {
-                                tracing::debug!("server io error: {}", e);
+                                tracing::debug!("[HTTP] server io error: {}", e);
                             };
                         }
-                        Err(e) => tracing::debug!("upgrade error: {}", e),
+                        Err(e) => tracing::debug!("[HTTP] upgrade error: {}", e),
                     }
                 });
 
                 Ok(Response::new(empty()))
             } else {
-                tracing::warn!("CONNECT host is not socket addr: {:?}", req.uri());
+                tracing::warn!("[HTTP] CONNECT host is not socket addr: {:?}", req.uri());
                 let mut resp = Response::new(full("CONNECT must be to a socket address"));
                 *resp.status_mut() = StatusCode::BAD_REQUEST;
 
@@ -292,13 +292,13 @@ impl Handler {
         match tokio::io::copy_bidirectional(&mut TokioIo::new(upgraded), &mut server).await {
             Ok((from_client, from_server)) => {
                 tracing::info!(
-                    "client wrote {} bytes and received {} bytes",
+                    "[HTTP] client wrote {} bytes and received {} bytes",
                     from_client,
                     from_server
                 );
             }
             Err(err) => {
-                tracing::trace!("tunnel error: {}", err);
+                tracing::trace!("[HTTP] tunnel error: {}", err);
             }
         }
 

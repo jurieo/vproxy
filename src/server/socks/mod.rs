@@ -163,13 +163,13 @@ async fn hanlde_connect_proxy(
             match tokio::io::copy_bidirectional(&mut target_stream, &mut conn).await {
                 Ok((from_client, from_server)) => {
                     tracing::info!(
-                        "[TCP] client wrote {} bytes and received {} bytes",
+                        "[SOCKS5] client wrote {} bytes and received {} bytes",
                         from_client,
                         from_server
                     );
                 }
                 Err(err) => {
-                    tracing::trace!("[TCP] tunnel error: {}", err);
+                    tracing::trace!("[SOCKS5] tunnel error: {}", err);
                 }
             };
 
