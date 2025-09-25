@@ -8,6 +8,7 @@ use daemonize::Daemonize;
 
 use crate::{BootArgs, server};
 
+const BIN_NAME: &str = env!("CARGO_PKG_NAME");
 const DEFAULT_PID_PATH: &str = concat!("/var/run/", env!("CARGO_PKG_NAME"), ".pid");
 const DEFAULT_STDOUT_PATH: &str = concat!("/var/run/", env!("CARGO_PKG_NAME"), ".out");
 const DEFAULT_STDERR_PATH: &str = concat!("/var/run/", env!("CARGO_PKG_NAME"), ".err");
@@ -49,7 +50,7 @@ impl Daemon {
     /// Start the daemon
     pub fn start(&self, config: BootArgs) -> crate::Result<()> {
         if let Some(pid) = self.get_pid()? {
-            println!("pingly is already running with pid: {pid}");
+            println!("{BIN_NAME} is already running with pid: {pid}");
             return Ok(());
         }
 
@@ -118,7 +119,7 @@ impl Daemon {
     /// Show the status of the daemon
     pub fn status(&self) -> crate::Result<()> {
         match self.get_pid()? {
-            None => println!("pingly is not running"),
+            None => println!("{BIN_NAME} is not running"),
             Some(pid) => {
                 let mut sys = sysinfo::System::new();
                 sys.refresh_all();
