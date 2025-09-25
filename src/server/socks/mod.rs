@@ -83,7 +83,7 @@ impl Socks5Server {
         } else {
             tokio::net::TcpSocket::new_v6()?
         };
-        socket.set_reuseaddr(true)?;
+
         socket.bind(ctx.bind)?;
         socket.listen(ctx.concurrent).map(|listener| Socks5Server {
             listener,

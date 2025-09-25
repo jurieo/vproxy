@@ -74,7 +74,7 @@ pub fn run(args: BootArgs) -> Result<()> {
     tracing::info!("Concurrent: {}", args.concurrent);
     tracing::info!("Connect timeout: {:?}s", args.connect_timeout);
 
-    Ok(tokio::runtime::Builder::new_multi_thread()
+    tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .worker_threads(cpu_cores.into())
         .build()?
@@ -103,6 +103,8 @@ pub fn run(args: BootArgs) -> Result<()> {
                     args.cidr_range,
                     args.fallback,
                     args.connect_timeout,
+                    args.reuseaddr,
+                    args.reuseport,
                 ),
             };
 
@@ -130,5 +132,7 @@ pub fn run(args: BootArgs) -> Result<()> {
                 } => result,
                 _ = shutdown_signal => Ok(()),
             }
-        })?)
+        })?;
+
+    Ok(())
 }
