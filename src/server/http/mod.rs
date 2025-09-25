@@ -22,7 +22,7 @@ use hyper_util::{
     server::conn::auto::Builder,
 };
 use tokio::{
-    io::{AsyncRead, AsyncWrite},
+    io::{AsyncRead, AsyncWrite, AsyncWriteExt},
     net::{TcpListener, TcpStream},
 };
 use tracing::{Level, instrument};
@@ -32,7 +32,7 @@ use self::{
     error::Error,
     tls::{RustlsAcceptor, RustlsConfig},
 };
-use super::{Acceptor, Connector, Context, ProxyServer, extension::Extension};
+use super::{Acceptor, Connector, Context, Server, extension::Extension};
 
 /// HTTP acceptor.
 #[derive(Clone)]
@@ -142,7 +142,7 @@ impl HttpServer {
     }
 }
 
-impl<A> ProxyServer for HttpServer<A>
+impl<A> Server for HttpServer<A>
 where
     A: Accept<TcpStream> + Clone + Send + Sync + 'static,
     A::Stream: AsyncRead + AsyncWrite + Unpin + Send,
@@ -171,13 +171,13 @@ where
     async fn accept(self, (stream, socket_addr): (TcpStream, SocketAddr)) {
         let acceptor = self.acceptor.clone();
         let builder = self.builder.clone();
-        let proxy = self.handler.clone();
+        let handler = self.handler.clone();
 
         if let Ok(stream) = acceptor.accept(stream).await {
             if let Err(err) = builder
                 .serve_connection_with_upgrades(
                     TokioIo::new(stream),
-                    service_fn(|req| <Handler as Clone>::clone(&proxy).proxy(socket_addr, req)),
+                    service_fn(|req| <Handler as Clone>::clone(&handler).proxy(socket_addr, req)),
                 )
                 .await
             {
@@ -189,7 +189,7 @@ where
 
 // ===== impl HttpServer =====
 
-impl ProxyServer for HttpsServer {
+impl Server for HttpsServer {
     #[inline]
     async fn start(self) -> std::io::Result<()> {
         self.http.start().await
@@ -206,7 +206,6 @@ impl From<Context> for Handler {
     fn from(ctx: Context) -> Self {
         let authenticator = match (ctx.auth.username, ctx.auth.password) {
             (Some(username), Some(password)) => Authenticator::Password { username, password },
-
             _ => Authenticator::None,
         };
 
@@ -302,9 +301,7 @@ impl Handler {
             }
         }
 
-        drop(server);
-
-        Ok(())
+        server.shutdown().await
     }
 }
 
