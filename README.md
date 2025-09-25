@@ -55,7 +55,7 @@ Options:
 - curl
 
 ```bash
-curl https://raw.githubusercontent.com/0x676e67/vproxy/main/.github/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/0x676e67/vproxy/main/.github/install.sh | bash
 ```
 
 - wget
@@ -127,6 +127,64 @@ while true; do curl -x http://127.0.0.1:8100 -s https://api.ip.sb/ip -A Mozilla;
 2001:470:e953:f1d7:eb68:cc59:b2d0:2c6f
 
 ```
+
+### Multi-Protocol Support
+
+vproxy supports multiple types of proxy servers with flexible configuration options. HTTP, HTTPS, and SOCKS5 proxies can run independently, or use the auto-detection mode to handle all protocols on a single port. Each server type supports authentication, custom binding addresses, and advanced socket configurations.
+
+1. HTTP Proxy
+
+```bash
+# Basic HTTP proxy
+vproxy run http
+
+# HTTP proxy with authentication
+vproxy run http -u username -p password
+
+# HTTP proxy on custom port
+vproxy run --bind 0.0.0.0:8080 http
+```
+
+2. HTTPS Proxy
+
+```bash
+# HTTPS proxy with TLS certificates
+vproxy run https --tls-cert cert.pem --tls-key key.pem
+
+# HTTPS proxy with authentication
+vproxy run https --tls-cert cert.pem --tls-key key.pem -u username -p password
+```
+
+If no TLS certificate is provided, vproxy will automatically generate a self-signed certificate for HTTPS connections.
+
+3. SOCKS5 Proxy
+
+```bash
+# Basic SOCKS5 proxy
+vproxy run socks5
+
+# SOCKS5 proxy with authentication
+vproxy run socks5 -u username -p password
+
+# SOCKS5 proxy on custom port
+vproxy run --bind 0.0.0.0:1080 socks5
+```
+
+4. Auto Protocol Detection
+
+```bash
+# Auto-detect HTTP/HTTPS/SOCKS5 protocols on single port
+vproxy run auto
+
+# Auto-detect with HTTPS support
+vproxy run auto --tls-cert cert.pem --tls-key key.pem
+
+# Auto-detect with authentication
+vproxy run auto -u username -p password --tls-cert cert.pem --tls-key key.pem
+```
+
+The auto-detection server automatically identifies the protocol type and routes connections to the appropriate handler.
+
 
 - TTL Extension
 
