@@ -1,10 +1,10 @@
 [package]
 name = "vproxy"
-version = "2.4.2"
+version = "2.4.3"
 authors = ["gngppz@gmail.com"]
 description = "A high-performance HTTP/HTTPS/SOCKS5 proxy server"
 repository = "https://github.com/0x676e67/vproxy"
-categories = ["network-programming"]
+categories = ["network-programming", "command-line-utilities"]
 keywords = ["http", "https", "socks5", "proxy", "server"]
 readme = "README.md"
 license = "GPL-3.0"
