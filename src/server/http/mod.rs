@@ -49,11 +49,6 @@ pub struct HttpServer<A = DefaultAcceptor> {
     inner: HttpAcceptor<A>,
 }
 
-/// HTTPS server.
-pub struct HttpsServer<A = RustlsAcceptor> {
-    http: HttpServer<A>,
-}
-
 // ===== impl HttpAcceptor =====
 
 impl HttpAcceptor {
@@ -129,17 +124,15 @@ impl HttpServer {
         self,
         tls_cert: P,
         tls_key: P,
-    ) -> std::io::Result<HttpsServer<RustlsAcceptor>>
+    ) -> std::io::Result<HttpServer<RustlsAcceptor>>
     where
         P: Into<Option<PathBuf>>,
     {
         self.inner
             .with_https(tls_cert, tls_key)
-            .map(|inner| HttpsServer {
-                http: HttpServer {
-                    listener: self.listener,
-                    inner,
-                },
+            .map(|inner| HttpServer {
+                listener: self.listener,
+                inner,
             })
     }
 }
@@ -186,15 +179,6 @@ where
                 tracing::debug!("[HTTP] failed to serve connection: {:?}", err);
             }
         }
-    }
-}
-
-// ===== impl HttpServer =====
-
-impl Server for HttpsServer {
-    #[inline]
-    async fn start(self) -> std::io::Result<()> {
-        self.http.start().await
     }
 }
 
