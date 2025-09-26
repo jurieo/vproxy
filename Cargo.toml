@@ -1,6 +1,6 @@
 [package]
 name = "vproxy"
-version = "2.4.3"
+version = "2.4.4"
 authors = ["gngppz@gmail.com"]
 description = "A high-performance HTTP/HTTPS/SOCKS5 proxy server"
 repository = "https://github.com/0x676e67/vproxy"
@@ -42,7 +42,7 @@ hyper-util = { version = "0.1.17", features = ["full"] }
 http-body-util = "0.1.3"
 rustls-pki-types = { version = "1.12.0" }
 rustls-pemfile = { version = "2.2.0" }
-tokio-rustls = { version = "0.26.3", default-features = false, features = [
+tokio-rustls = { version = "0.26.4", default-features = false, features = [
     "tls12",
 ] }
 rcgen = "0.14.5"
