@@ -334,6 +334,7 @@ impl TcpConnector<'_> {
             }
         };
 
+        socket.set_nodelay(true)?;
         if let Some(reuseaddr) = self.inner.reuseaddr {
             socket.set_reuseaddr(reuseaddr)?;
         }
@@ -346,7 +347,6 @@ impl TcpConnector<'_> {
         if let Some(reuseport) = self.inner.reuseport {
             socket.set_reuseport(reuseport)?;
         }
-        socket.set_nodelay(true)?;
 
         Ok(socket)
     }
@@ -503,6 +503,11 @@ impl HttpConnector<'_> {
             }
             (None, addr) => connector.set_local_address(addr),
             _ => {}
+        }
+
+        connector.set_nodelay(true);
+        if let Some(reuseaddr) = self.inner.reuseaddr {
+            connector.set_reuse_address(reuseaddr);
         }
 
         Client::builder(TokioExecutor::new())

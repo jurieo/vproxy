@@ -16,17 +16,6 @@ use sysctl::{Sysctl, SysctlError};
 /// attempting to add the route. If the user does not have root privileges, the
 /// function returns immediately. If the `ip` command fails, it prints an error
 /// message to the console.
-///
-/// # Arguments
-///
-/// * `subnet` - The subnet for which to add a route.
-///
-/// # Example
-///
-/// ```
-/// let subnet = cidr::IpCidr::from_str("192.168.1.0/24").unwrap();
-/// sysctl_route_add_cidr(&subnet);
-/// ```
 pub async fn sysctl_route_add_cidr(subnet: &IpCidr) {
     let (connection, handle, _) = new_connection().unwrap();
 
@@ -126,12 +115,6 @@ async fn add_route(handle: Handle, cidr: &IpCidr) -> Result<(), Error> {
 /// It attempts to change the setting by calling the `execute_sysctl` function
 /// with the appropriate parameters. If the `sysctl` command fails, it logs an
 /// error message.
-///
-/// # Example
-///
-/// ```
-/// sysctl_ipv6_no_local_bind();
-/// ```
 pub fn sysctl_ipv6_no_local_bind(subnet: &IpCidr) {
     if subnet.is_ipv6() {
         if let Err(err) = execute_sysctl("net.ipv6.ip_nonlocal_bind", "1") {
@@ -144,26 +127,6 @@ pub fn sysctl_ipv6_no_local_bind(subnet: &IpCidr) {
 /// It attempts to change the setting by calling the `execute_sysctl` function
 /// with the appropriate parameters. If the `sysctl` command fails, it logs an
 /// error message.
-///
-/// # Example
-///
-/// ```
-/// sysctl_ipv6_all_enable_ipv6();
-/// ```
-///
-/// # Errors
-///
-/// If the `sysctl` command fails, this function logs an error message using
-/// the `tracing` crate and returns an error.
-///
-/// # Safety
-///
-/// This function requires root privileges to execute the `sysctl` command.
-/// Ensure that the program is running with the necessary permissions.
-///
-/// # See Also
-///
-/// * `execute_sysctl` - The function used to execute the `sysctl` command.
 pub fn sysctl_ipv6_all_enable_ipv6(subnet: &IpCidr) {
     if subnet.is_ipv6() {
         if let Err(err) = execute_sysctl("net.ipv6.conf.all.disable_ipv6", "0") {
@@ -176,22 +139,6 @@ pub fn sysctl_ipv6_all_enable_ipv6(subnet: &IpCidr) {
 /// It creates a new `sysctl::Ctl` object with the specified command, retrieves
 /// the current value of the parameter, logs the old value, and then sets the
 /// parameter to the new value. If any step fails, it returns an error.
-///
-/// # Arguments
-///
-/// * `command` - The sysctl command to execute (e.g., "net.ipv6.ip_nonlocal_bind").
-/// * `value` - The value to set for the specified sysctl command.
-///
-/// # Returns
-///
-/// * `Result<(), SysctlError>` - Returns `Ok(())` if the command succeeds, otherwise returns a
-///   `SysctlError`.
-///
-/// # Example
-///
-/// ```
-/// execute_sysctl("net.ipv6.ip_nonlocal_bind", "1")?;
-/// ```
 fn execute_sysctl(command: &str, value: &str) -> Result<(), SysctlError> {
     let ctl = <sysctl::Ctl as Sysctl>::new(command)?;
     assert_eq!(command, ctl.name()?);
