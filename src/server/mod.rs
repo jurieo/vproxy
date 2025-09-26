@@ -86,13 +86,6 @@ pub fn run(args: BootArgs) -> Result<()> {
                 crate::route::sysctl_route_add_cidr(cidr).await;
             }
 
-            let shutdown_signal = async {
-                tokio::signal::ctrl_c()
-                    .await
-                    .expect("failed to listen for shutdown signal");
-                tracing::info!("Shutdown signal received, shutting down gracefully...");
-            };
-
             let context = move |auth: AuthMode| Context {
                 auth,
                 bind: args.bind,
@@ -136,7 +129,10 @@ pub fn run(args: BootArgs) -> Result<()> {
                         }
                     }
                 } => result,
-                _ = shutdown_signal => Ok(()),
+                _ = tokio::signal::ctrl_c() => {
+                    tracing::info!("Shutdown signal received, shutting down gracefully...");
+                    Ok(())
+                },
             }
         })?;
 
