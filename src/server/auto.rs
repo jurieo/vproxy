@@ -73,15 +73,19 @@ impl Server for AutoDetectServer {
                     .await
                     .is_ok()
                 {
-                    if protocol[0] == 0x05 {
-                        // assuming socks5
-                        acceptor.0.accept(conn).await;
-                    } else if protocol[0] <= 0x40 {
-                        // ASCII < 'A', assuming https
-                        acceptor.2.accept(conn).await;
-                    } else {
-                        // ASCII >= 'A', assuming http
-                        acceptor.1.accept(conn).await;
+                    match protocol[0] {
+                        0x05 => {
+                            // ASCII '5', assuming socks5
+                            acceptor.0.accept(conn).await;
+                        }
+                        0x00..0x41 => {
+                            // ASCII < 'A', assuming https
+                            acceptor.2.accept(conn).await;
+                        }
+                        _ => {
+                            // ASCII >= 'A', assuming http
+                            acceptor.1.accept(conn).await;
+                        }
                     }
                 }
             });
