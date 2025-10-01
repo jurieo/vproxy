@@ -150,10 +150,9 @@ async fn handle_connect(
 
     match outbound {
         Ok(mut outbound) => {
-            let mut inbound: TcpStream = connect
+            let mut inbound = connect
                 .reply(Reply::Succeeded, Address::unspecified())
-                .await?
-                .into();
+                .await?;
 
             match crate::io::copy_bidirectional(&mut inbound, &mut outbound).await {
                 Ok((from_client, from_server)) => {
@@ -367,8 +366,7 @@ async fn handle_bind(
         .reply(Reply::Succeeded, Address::from(outbound_addr))
         .await
     {
-        Ok(inbound) => {
-            let mut inbound: TcpStream = inbound.into();
+        Ok(mut inbound) => {
             match crate::io::copy_bidirectional(&mut inbound, &mut outbound).await {
                 Ok((from_client, from_server)) => {
                     tracing::info!(

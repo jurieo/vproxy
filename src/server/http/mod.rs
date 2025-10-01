@@ -14,7 +14,7 @@ use std::{
 
 use auth::Authenticator;
 use bytes::Bytes;
-use http::{StatusCode, uri::Authority};
+use http::{StatusCode, header, uri::Authority};
 use http_body_util::{BodyExt, Empty, Full, combinators::BoxBody};
 use hyper::{Method, Request, Response, body::Incoming, service::service_fn, upgrade::Upgraded};
 use hyper_util::{
@@ -213,7 +213,22 @@ impl Handler {
         let extension = match self.authenticator.authenticate(req.headers()).await {
             Ok(extension) => extension,
             // If the client is not authorized, return an error response
-            Err(e) => return Ok(e.try_into()?),
+            Err(err) => {
+                let resp = match err {
+                    Error::ProxyAuthenticationRequired => Response::builder()
+                        .status(StatusCode::PROXY_AUTHENTICATION_REQUIRED)
+                        .header(header::PROXY_AUTHENTICATE, "Basic realm=\"Proxy\"")
+                        .body(empty()),
+                    Error::Forbidden => Response::builder()
+                        .status(StatusCode::FORBIDDEN)
+                        .body(empty()),
+                    _ => Response::builder()
+                        .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .body(empty()),
+                }?;
+
+                return Ok(resp);
+            }
         };
 
         if Method::CONNECT == req.method() {
@@ -231,7 +246,7 @@ impl Handler {
             // connection be upgraded, so we can't return a response inside
             // `on_upgrade` future.
             if let Some(authority) = req.uri().authority().cloned() {
-                tokio::task::spawn(async move {
+                tokio::spawn(async move {
                     match hyper::upgrade::on(req).await {
                         Ok(upgraded) => {
                             if let Err(e) = self.tunnel(upgraded, authority, extension).await {
@@ -317,29 +332,9 @@ fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
 
 mod auth {
     use base64::Engine;
-    use bytes::Bytes;
-    use http::{HeaderMap, Response, StatusCode, header};
-    use http_body_util::combinators::BoxBody;
+    use http::{HeaderMap, header};
 
-    use super::{Error, Extension, empty};
-
-    impl TryInto<Response<BoxBody<Bytes, hyper::Error>>> for Error {
-        type Error = http::Error;
-        fn try_into(self) -> Result<Response<BoxBody<Bytes, hyper::Error>>, Self::Error> {
-            match self {
-                Error::ProxyAuthenticationRequired => Response::builder()
-                    .status(StatusCode::PROXY_AUTHENTICATION_REQUIRED)
-                    .header(header::PROXY_AUTHENTICATE, "Basic realm=\"Proxy\"")
-                    .body(empty()),
-                Error::Forbidden => Response::builder()
-                    .status(StatusCode::FORBIDDEN)
-                    .body(empty()),
-                _ => Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(empty()),
-            }
-        }
-    }
+    use super::{Error, Extension};
 
     /// Enum representing different types of authenticators.
     #[derive(Clone)]
