@@ -1,8 +1,8 @@
-mod accept;
+pub mod accept;
+pub mod tls;
+
 mod error;
 mod genca;
-
-pub mod tls;
 
 use std::{
     io::{self},
@@ -19,7 +19,7 @@ use http_body_util::{BodyExt, Empty, Full, combinators::BoxBody};
 use hyper::{Method, Request, Response, body::Incoming, service::service_fn, upgrade::Upgraded};
 use hyper_util::{
     rt::{TokioExecutor, TokioIo},
-    server::conn::auto::Builder,
+    server::conn::auto::{Builder, upgrade},
 };
 use tokio::{
     io::{AsyncRead, AsyncWrite, AsyncWriteExt},
@@ -274,7 +274,19 @@ impl Handler {
             .connect_with_authority(authority)
             .await?;
 
-        match tokio::io::copy_bidirectional(&mut TokioIo::new(upgraded), &mut server).await {
+        let res = match upgrade::downcast::<TokioIo<TcpStream>>(upgraded) {
+            Ok(io) => {
+                let mut client = io.io.into_inner();
+                let res = crate::io::copy_bidirectional(&mut client, &mut server).await;
+                client.shutdown().await?;
+                res
+            }
+            Err(upgraded) => {
+                tokio::io::copy_bidirectional(&mut TokioIo::new(upgraded), &mut server).await
+            }
+        };
+
+        match res {
             Ok((from_client, from_server)) => {
                 tracing::info!(
                     "[HTTP] client wrote {} bytes and received {} bytes",

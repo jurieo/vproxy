@@ -7,7 +7,7 @@ use tokio::{
 
 use super::{
     Acceptor, Context, Server,
-    http::{HttpAcceptor, tls::RustlsAcceptor},
+    http::{HttpAcceptor, accept::DefaultAcceptor, tls::RustlsAcceptor},
     socks::Socks5Acceptor,
 };
 
@@ -17,7 +17,11 @@ use super::{
 /// to the appropriate protocol handler based on the first few bytes of the connection.
 pub struct AutoDetectServer {
     listener: TcpListener,
-    acceptor: (Socks5Acceptor, HttpAcceptor, HttpAcceptor<RustlsAcceptor>),
+    acceptor: (
+        Socks5Acceptor,
+        HttpAcceptor<DefaultAcceptor>,
+        HttpAcceptor<RustlsAcceptor>,
+    ),
 }
 
 impl AutoDetectServer {
@@ -42,7 +46,7 @@ impl AutoDetectServer {
                     listener,
                     acceptor: (
                         Socks5Acceptor::new(ctx.clone()),
-                        HttpAcceptor::new(ctx.clone()),
+                        HttpAcceptor::new(ctx),
                         https_acceptor,
                     ),
                 })
