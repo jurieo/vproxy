@@ -19,7 +19,7 @@ use http_body_util::{BodyExt, Empty, Full, combinators::BoxBody};
 use hyper::{Method, Request, Response, body::Incoming, service::service_fn, upgrade::Upgraded};
 use hyper_util::{
     rt::{TokioExecutor, TokioIo},
-    server::conn::auto::{Builder, upgrade},
+    server::conn::auto::Builder,
 };
 use tokio::{
     io::{AsyncRead, AsyncWrite, AsyncWriteExt},
@@ -304,17 +304,18 @@ async fn tunnel(
     let mut server = connector.connect(target).await?;
 
     #[cfg(target_os = "linux")]
-    let res = match upgrade::downcast::<TokioIo<TcpStream>>(upgraded) {
-        Ok(io) => {
-            let mut client = io.io.into_inner();
-            let res = crate::io::copy_bidirectional(&mut client, &mut server).await;
-            client.shutdown().await?;
-            res
-        }
-        Err(upgraded) => {
-            tokio::io::copy_bidirectional(&mut TokioIo::new(upgraded), &mut server).await
-        }
-    };
+    let res =
+        match hyper_util::server::conn::auto::upgrade::downcast::<TokioIo<TcpStream>>(upgraded) {
+            Ok(io) => {
+                let mut client = io.io.into_inner();
+                let res = crate::io::copy_bidirectional(&mut client, &mut server).await;
+                client.shutdown().await?;
+                res
+            }
+            Err(upgraded) => {
+                tokio::io::copy_bidirectional(&mut TokioIo::new(upgraded), &mut server).await
+            }
+        };
 
     #[cfg(not(target_os = "linux"))]
     let res = tokio::io::copy_bidirectional(&mut TokioIo::new(upgraded), &mut server).await;
