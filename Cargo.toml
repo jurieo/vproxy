@@ -81,8 +81,11 @@ rpmalloc = ["dep:rpmalloc"]
 mimalloc = ["dep:mimalloc"]
 
 [profile.release]
-lto = true
-opt-level = 3
 codegen-units = 1
-strip = true
+incremental = false
+lto = "fat"
+opt-level = 3
 panic = "abort"
+strip = true
+
+
