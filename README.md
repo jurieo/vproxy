@@ -252,6 +252,289 @@ $ for i in `seq 1 3`; do curl -x "socks5h://test-ttl-2:test@127.0.0.1:1080" http
 
 </details>
 
+## Benchmark
+
+<details>
+
+<summary>If you need more detailed benchmark information, please check here</summary>
+
+### Hardware/Software
+
+- CPU: Apple M3 Max (16) @ 4.06 GHz
+- OS: Ubuntu 25.04 aarch64 (6.15.11-orbstack-00542-g4f455d264886)
+- Iperf3: 3.18
+- Proxychains-ng: 4.17
+
+> Tests performed in virtualized environment (OrbStack). Performance may vary due to VM overhead and resource sharing.
+
+### Topology
+
+```bash
+iperf3 server <---> socks5 server <---> iperf3 client
+```
+
+### vproxy
+
+1. version `vproxy 2.5.1`
+2. repository: `https://github.com/0x676e67/vproxy`
+3. command
+
+```bash
+vproxy run socks5
+```
+
+- Upload
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.01  sec   167 GBytes   143 Gbits/sec    1            sender
+[  5]   0.00-10.01  sec   167 GBytes   143 Gbits/sec                  receiver
+```
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -P 10
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.00  sec  40.8 GBytes  35.1 Gbits/sec    9            sender
+[  9]   0.00-10.00  sec  40.8 GBytes  35.1 Gbits/sec                  receiver
+[ 11]   0.00-10.00  sec  43.6 GBytes  37.4 Gbits/sec   10            sender
+[ 11]   0.00-10.00  sec  43.6 GBytes  37.4 Gbits/sec                  receiver
+[ 13]   0.00-10.00  sec  41.9 GBytes  36.0 Gbits/sec   11            sender
+[ 13]   0.00-10.00  sec  41.9 GBytes  36.0 Gbits/sec                  receiver
+[ 15]   0.00-10.00  sec  42.2 GBytes  36.2 Gbits/sec   10            sender
+[ 15]   0.00-10.00  sec  42.2 GBytes  36.2 Gbits/sec                  receiver
+[ 17]   0.00-10.00  sec  41.2 GBytes  35.4 Gbits/sec   11            sender
+[ 17]   0.00-10.00  sec  41.2 GBytes  35.4 Gbits/sec                  receiver
+[ 19]   0.00-10.00  sec  41.2 GBytes  35.4 Gbits/sec   10            sender
+[ 19]   0.00-10.00  sec  41.2 GBytes  35.4 Gbits/sec                  receiver
+[ 21]   0.00-10.00  sec  43.3 GBytes  37.2 Gbits/sec   15            sender
+[ 21]   0.00-10.00  sec  43.3 GBytes  37.2 Gbits/sec                  receiver
+[ 23]   0.00-10.00  sec  40.6 GBytes  34.8 Gbits/sec    8            sender
+[ 23]   0.00-10.00  sec  40.6 GBytes  34.8 Gbits/sec                  receiver
+[ 25]   0.00-10.00  sec  40.2 GBytes  34.5 Gbits/sec   12            sender
+[ 25]   0.00-10.00  sec  40.2 GBytes  34.5 Gbits/sec                  receiver
+[ 27]   0.00-10.00  sec  42.6 GBytes  36.6 Gbits/sec   10            sender
+[ 27]   0.00-10.00  sec  42.6 GBytes  36.6 Gbits/sec                  receiver
+[SUM]   0.00-10.00  sec   418 GBytes   359 Gbits/sec  106             sender
+[SUM]   0.00-10.00  sec   417 GBytes   359 Gbits/sec                  receiver
+```
+
+- Download
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -R
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.01  sec   116 GBytes  99.5 Gbits/sec    0            sender
+[  9]   0.00-10.01  sec   116 GBytes  99.5 Gbits/sec                  receiver
+```
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -R -P 10
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.00  sec  42.7 GBytes  36.7 Gbits/sec   10            sender
+[  9]   0.00-10.00  sec  42.7 GBytes  36.7 Gbits/sec                  receiver
+[ 11]   0.00-10.00  sec  45.8 GBytes  39.4 Gbits/sec   12            sender
+[ 11]   0.00-10.00  sec  45.8 GBytes  39.4 Gbits/sec                  receiver
+[ 13]   0.00-10.00  sec  43.5 GBytes  37.3 Gbits/sec    9            sender
+[ 13]   0.00-10.00  sec  43.5 GBytes  37.3 Gbits/sec                  receiver
+[ 15]   0.00-10.00  sec  42.4 GBytes  36.4 Gbits/sec    7            sender
+[ 15]   0.00-10.00  sec  42.4 GBytes  36.4 Gbits/sec                  receiver
+[ 17]   0.00-10.00  sec  42.1 GBytes  36.1 Gbits/sec   13            sender
+[ 17]   0.00-10.00  sec  42.1 GBytes  36.1 Gbits/sec                  receiver
+[ 19]   0.00-10.00  sec  40.1 GBytes  34.4 Gbits/sec    6            sender
+[ 19]   0.00-10.00  sec  40.1 GBytes  34.4 Gbits/sec                  receiver
+[ 21]   0.00-10.00  sec  42.3 GBytes  36.3 Gbits/sec    8            sender
+[ 21]   0.00-10.00  sec  42.3 GBytes  36.3 Gbits/sec                  receiver
+[ 23]   0.00-10.00  sec  43.1 GBytes  37.0 Gbits/sec    9            sender
+[ 23]   0.00-10.00  sec  43.1 GBytes  37.0 Gbits/sec                  receiver
+[ 25]   0.00-10.00  sec  42.8 GBytes  36.8 Gbits/sec    8            sender
+[ 25]   0.00-10.00  sec  42.8 GBytes  36.7 Gbits/sec                  receiver
+[ 27]   0.00-10.00  sec  42.4 GBytes  36.4 Gbits/sec    8            sender
+[ 27]   0.00-10.00  sec  42.4 GBytes  36.4 Gbits/sec                  receiver
+[SUM]   0.00-10.00  sec   427 GBytes   367 Gbits/sec   90             sender
+[SUM]   0.00-10.00  sec   427 GBytes   367 Gbits/sec                  receiver
+```
+
+### hev-socks5-server
+
+1. version `hev-socks5-server 2.7.0`
+2. repository: `https://github.com/heiher/hev-socks5-server`
+3. Command
+
+```bash
+# workers: 16
+hev-socks5-server conf/main.yml
+```
+
+- Upload
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.01  sec   167 GBytes   143 Gbits/sec    1            sender
+[  5]   0.00-10.05  sec   167 GBytes   143 Gbits/sec                  receiver
+```
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -P 10
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.01  sec  57.2 GBytes  49.1 Gbits/sec    0            sender
+[  9]   0.00-10.04  sec  57.2 GBytes  49.0 Gbits/sec                  receiver
+[ 11]   0.00-10.01  sec  55.9 GBytes  48.0 Gbits/sec    0            sender
+[ 11]   0.00-10.04  sec  55.9 GBytes  47.8 Gbits/sec                  receiver
+[ 13]   0.00-10.01  sec  30.6 GBytes  26.2 Gbits/sec    1            sender
+[ 13]   0.00-10.04  sec  30.6 GBytes  26.1 Gbits/sec                  receiver
+[ 15]   0.00-10.01  sec  31.4 GBytes  26.9 Gbits/sec    0            sender
+[ 15]   0.00-10.04  sec  31.4 GBytes  26.8 Gbits/sec                  receiver
+[ 17]   0.00-10.01  sec  57.0 GBytes  49.0 Gbits/sec    1            sender
+[ 17]   0.00-10.04  sec  57.0 GBytes  48.8 Gbits/sec                  receiver
+[ 19]   0.00-10.01  sec  56.7 GBytes  48.7 Gbits/sec    0            sender
+[ 19]   0.00-10.04  sec  56.7 GBytes  48.5 Gbits/sec                  receiver
+[ 21]   0.00-10.01  sec  31.2 GBytes  26.8 Gbits/sec    2            sender
+[ 21]   0.00-10.04  sec  31.2 GBytes  26.7 Gbits/sec                  receiver
+[ 23]   0.00-10.01  sec  30.7 GBytes  26.4 Gbits/sec    1            sender
+[ 23]   0.00-10.04  sec  30.7 GBytes  26.3 Gbits/sec                  receiver
+[ 25]   0.00-10.01  sec  58.4 GBytes  50.1 Gbits/sec    0            sender
+[ 25]   0.00-10.04  sec  58.4 GBytes  49.9 Gbits/sec                  receiver
+[ 27]   0.00-10.01  sec  59.5 GBytes  51.1 Gbits/sec    0            sender
+[ 27]   0.00-10.04  sec  59.5 GBytes  50.9 Gbits/sec                  receiver
+[SUM]   0.00-10.01  sec   469 GBytes   402 Gbits/sec    5             sender
+[SUM]   0.00-10.04  sec   469 GBytes   401 Gbits/sec                  receiver
+```
+
+- Download
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -R
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.05  sec   116 GBytes  98.9 Gbits/sec    1            sender
+[  9]   0.00-10.00  sec   116 GBytes  99.3 Gbits/sec                  receiver
+```
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -R -P 10
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.03  sec  22.4 GBytes  19.2 Gbits/sec    1            sender
+[  9]   0.00-10.00  sec  22.4 GBytes  19.2 Gbits/sec                  receiver
+[ 11]   0.00-10.03  sec  64.9 GBytes  55.6 Gbits/sec    2            sender
+[ 11]   0.00-10.00  sec  64.9 GBytes  55.7 Gbits/sec                  receiver
+[ 13]   0.00-10.03  sec  59.2 GBytes  50.7 Gbits/sec    0            sender
+[ 13]   0.00-10.00  sec  59.2 GBytes  50.8 Gbits/sec                  receiver
+[ 15]   0.00-10.03  sec  37.2 GBytes  31.8 Gbits/sec    1            sender
+[ 15]   0.00-10.00  sec  37.2 GBytes  31.9 Gbits/sec                  receiver
+[ 17]   0.00-10.03  sec  37.1 GBytes  31.7 Gbits/sec    0            sender
+[ 17]   0.00-10.00  sec  37.1 GBytes  31.8 Gbits/sec                  receiver
+[ 19]   0.00-10.03  sec  64.3 GBytes  55.1 Gbits/sec    1            sender
+[ 19]   0.00-10.00  sec  64.3 GBytes  55.2 Gbits/sec                  receiver
+[ 21]   0.00-10.03  sec  22.3 GBytes  19.1 Gbits/sec    1            sender
+[ 21]   0.00-10.00  sec  22.3 GBytes  19.1 Gbits/sec                  receiver
+[ 23]   0.00-10.03  sec  21.6 GBytes  18.5 Gbits/sec    0            sender
+[ 23]   0.00-10.00  sec  21.6 GBytes  18.5 Gbits/sec                  receiver
+[ 25]   0.00-10.03  sec  59.6 GBytes  51.1 Gbits/sec    1            sender
+[ 25]   0.00-10.00  sec  59.6 GBytes  51.2 Gbits/sec                  receiver
+[ 27]   0.00-10.03  sec  62.1 GBytes  53.2 Gbits/sec    1            sender
+[ 27]   0.00-10.00  sec  62.1 GBytes  53.3 Gbits/sec                  receiver
+[SUM]   0.00-10.03  sec   451 GBytes   386 Gbits/sec    8             sender
+[SUM]   0.00-10.00  sec   451 GBytes   387 Gbits/sec                  receiver
+```
+
+### fast-socks5
+
+1. version `fast-socks5 1.0.0-rc.0`
+2. repository: `https://github.com/dizda/fast-socks5`
+3. Command
+
+```bash
+cargo run -r --example server -- --listen-addr 127.0.0.1:1080 no-auth
+```
+
+- Upload
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.01  sec  46.4 GBytes  39.8 Gbits/sec    0            sender
+[  9]   0.00-10.05  sec  46.4 GBytes  39.7 Gbits/sec                  receiver
+```
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -P 10
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.00  sec  26.8 GBytes  23.0 Gbits/sec    3            sender
+[  9]   0.00-10.03  sec  26.8 GBytes  23.0 Gbits/sec                  receiver
+[ 11]   0.00-10.00  sec  24.2 GBytes  20.8 Gbits/sec    7            sender
+[ 11]   0.00-10.03  sec  24.2 GBytes  20.7 Gbits/sec                  receiver
+[ 13]   0.00-10.00  sec  25.5 GBytes  21.9 Gbits/sec    3            sender
+[ 13]   0.00-10.03  sec  25.5 GBytes  21.8 Gbits/sec                  receiver
+[ 15]   0.00-10.00  sec  24.3 GBytes  20.9 Gbits/sec    9            sender
+[ 15]   0.00-10.03  sec  24.3 GBytes  20.8 Gbits/sec                  receiver
+[ 17]   0.00-10.00  sec  22.2 GBytes  19.1 Gbits/sec   15            sender
+[ 17]   0.00-10.03  sec  22.2 GBytes  19.0 Gbits/sec                  receiver
+[ 19]   0.00-10.00  sec  24.9 GBytes  21.4 Gbits/sec    7            sender
+[ 19]   0.00-10.03  sec  24.9 GBytes  21.3 Gbits/sec                  receiver
+[ 21]   0.00-10.00  sec  25.2 GBytes  21.7 Gbits/sec    6            sender
+[ 21]   0.00-10.03  sec  25.2 GBytes  21.6 Gbits/sec                  receiver
+[ 23]   0.00-10.00  sec  24.0 GBytes  20.6 Gbits/sec   12            sender
+[ 23]   0.00-10.03  sec  24.0 GBytes  20.6 Gbits/sec                  receiver
+[ 25]   0.00-10.00  sec  26.9 GBytes  23.1 Gbits/sec    0            sender
+[ 25]   0.00-10.03  sec  26.9 GBytes  23.0 Gbits/sec                  receiver
+[ 27]   0.00-10.00  sec  21.8 GBytes  18.7 Gbits/sec   13            sender
+[ 27]   0.00-10.03  sec  21.8 GBytes  18.7 Gbits/sec                  receiver
+[SUM]   0.00-10.00  sec   246 GBytes   211 Gbits/sec   75             sender
+[SUM]   0.00-10.03  sec   246 GBytes   211 Gbits/sec                  receiver
+```
+
+- Download
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -R
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.05  sec  43.5 GBytes  37.2 Gbits/sec    0            sender
+[  9]   0.00-10.01  sec  43.5 GBytes  37.4 Gbits/sec                  receiver
+```
+
+```bash
+$ proxychains iperf3 -c 127.0.0.1 -R -P 10
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  9]   0.00-10.03  sec  20.1 GBytes  17.2 Gbits/sec   19            sender
+[  9]   0.00-10.00  sec  20.1 GBytes  17.3 Gbits/sec                  receiver
+[ 11]   0.00-10.03  sec  17.2 GBytes  14.8 Gbits/sec   19            sender
+[ 11]   0.00-10.00  sec  17.2 GBytes  14.8 Gbits/sec                  receiver
+[ 13]   0.00-10.03  sec  22.6 GBytes  19.4 Gbits/sec    7            sender
+[ 13]   0.00-10.00  sec  22.6 GBytes  19.5 Gbits/sec                  receiver
+[ 15]   0.00-10.03  sec  21.9 GBytes  18.7 Gbits/sec    1            sender
+[ 15]   0.00-10.00  sec  21.9 GBytes  18.8 Gbits/sec                  receiver
+[ 17]   0.00-10.03  sec  17.7 GBytes  15.1 Gbits/sec   14            sender
+[ 17]   0.00-10.00  sec  17.7 GBytes  15.2 Gbits/sec                  receiver
+[ 19]   0.00-10.03  sec  23.8 GBytes  20.4 Gbits/sec    2            sender
+[ 19]   0.00-10.00  sec  23.8 GBytes  20.4 Gbits/sec                  receiver
+[ 21]   0.00-10.03  sec  22.9 GBytes  19.6 Gbits/sec    1            sender
+[ 21]   0.00-10.00  sec  22.9 GBytes  19.7 Gbits/sec                  receiver
+[ 23]   0.00-10.03  sec  21.9 GBytes  18.7 Gbits/sec    7            sender
+[ 23]   0.00-10.00  sec  21.9 GBytes  18.8 Gbits/sec                  receiver
+[ 25]   0.00-10.03  sec  21.1 GBytes  18.0 Gbits/sec   10            sender
+[ 25]   0.00-10.00  sec  21.1 GBytes  18.1 Gbits/sec                  receiver
+[ 27]   0.00-10.03  sec  17.6 GBytes  15.1 Gbits/sec    6            sender
+[ 27]   0.00-10.00  sec  17.6 GBytes  15.2 Gbits/sec                  receiver
+[SUM]   0.00-10.03  sec   207 GBytes   177 Gbits/sec   86             sender
+[SUM]   0.00-10.00  sec   207 GBytes   178 Gbits/sec                  receiver
+```
+
+</details>
+
+
 ## Contributing
 
 If you would like to submit your contribution, please open a [Pull Request](https://github.com/0x676e67/vproxy/pulls).
