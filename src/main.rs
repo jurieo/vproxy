@@ -188,16 +188,6 @@ pub struct BootArgs {
     #[arg(long, default_value = "true")]
     reuseaddr: Option<bool>,
 
-    /// Enable SO_REUSEPORT for outbound connections
-    #[cfg(all(
-        unix,
-        not(target_os = "solaris"),
-        not(target_os = "illumos"),
-        not(target_os = "cygwin"),
-    ))]
-    #[arg(long)]
-    reuseport: Option<bool>,
-
     #[command(subcommand)]
     proxy: Proxy,
 }
